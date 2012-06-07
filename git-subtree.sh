@@ -31,6 +31,8 @@ b,branch=     create a new branch from the split subtree
 ignore-joins  ignore prior --rejoin commits
 onto=         try connecting new tree to an existing one
 rejoin        merge the new branch back into HEAD
+options for 'push'
+f,force       use force push
 options for 'add', 'merge', 'pull' and 'push'
 squash        merge subtree changes as a single commit
 "
@@ -89,6 +91,7 @@ while [ $# -gt 0 ]; do
         -b) branch="$1"; shift ;;
         -P|--prefix) prefix="$1"; shift ;;
         -m) message="$1"; shift ;;
+        -f|--force) force=1 ;;
         --no-prefix) prefix= ;;
         --onto) onto="$1"; shift ;;
         --no-onto) onto= ;;
@@ -367,7 +370,7 @@ rejoin_msg()
         commit_message="Split '$dir/' into commit '$latest_new'"
     fi
     cat <<-EOF
-    $commit_message
+$commit_message
 
     git-subtree-dir: $dir
     git-subtree-mainline: $latest_old
@@ -781,10 +784,16 @@ cmd_push()
             repository=$(git config -f .gittrees subtree.$prefix.url)
             refspec=$(git config -f .gittrees subtree.$prefix.branch)
         fi
+
+        push_opts=
+        if [ "$force" == "1" ]; then
+          push_opts="$push_opts --force"
+        fi
+
         echo "git push using: " $repository $refspec
         rev=$(git subtree split --prefix=$prefix)
         if [ -n "$rev" ]; then
-            git push $repository $rev:refs/heads/$refspec
+            git push $push_opts $repository $rev:refs/heads/$refspec
         else
             die "Couldn't push, 'git subtree split' failed."
         fi
