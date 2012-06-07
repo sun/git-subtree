@@ -803,11 +803,11 @@ cmd_push()
 
 subtree_list() 
 {
-	git config -f .gittrees -l | grep subtree | grep path | grep -o '=.*' | grep -o '[^=].*' |
-	while read path; do 
+	git config -f .gittrees --get-regexp "^subtree\..*\.path$" | cut -d ' ' -f 2 |
+	while read path; do
 		repository=$(git config -f .gittrees subtree.$path.url)
 		refspec=$(git config -f .gittrees subtree.$path.branch)
-		echo "	$path		(merged from $repository branch $refspec) "
+		echo "$path	$repository ($refspec)"
 	done
 }
 
